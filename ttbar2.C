@@ -24,7 +24,7 @@ void ttbar2()
   TChain* fChain = new TChain("ttHTreeMaker/worldTree");
   fChain->AddFile("$PWD/yggdrasil_treeMaker_ttbar_2l2nu.root");
   // ** B. Set output file
-  TFile *outfile = new TFile( "$PWD/ttbarAnalyzer_outfile_2.root", "RECREATE");
+  TFile *outfile = new TFile( "$PWD/ttbar2.root", "RECREATE");
   fstream output;
   output.open("Event Categories.txt",ios_base::in|ios_base::out|ios_base::trunc);
     
@@ -95,26 +95,31 @@ void ttbar2()
     
     // ** I. Loop over jets
     //std::cout << "Evt: " << eve->evt_ << ", njets: " << eve->jet_pt_[0].size() << ", nLep: " << eve->lepton_pt_.size() << std::endl;
-    for (unsigned int j = 0; j < eve->jet_pt_[0].size(); j++){ 
+    for (unsigned int j = 0; j < eve->jet_pt_[0].size(); j++){
+      bool JetSatisfyCut=0; 
 
       //calc nJets
       if ( (eve->jet_pt_[0][j] > 20)&&(TMath::Abs(eve->jet_eta_[0][j])<2.4)&&(eve->jet_puid_[0][j]==7) ){
+        JetSatisfyCut = 1;
+        if(eve->jet_pt_[0][j]>30)   nJ++;
           for(int k=0;k<eve->lepton_pt_.size();k++)
           {
               if((eve->lepton_isMuon_[k])&&((eve->lepton_pt_[k])>15)&&(TMath::Abs(eve->lepton_eta_[k])<2.4)&&(eve->lepton_relIso_[k]<0.25)&&(eve->lepton_isTight_[k]==1))
               {
-                  if(sqrt((eve->jet_eta_[0][j]-eve->lepton_eta_[k])*(eve->jet_eta_[0][j]-eve->lepton_eta_[k])+(eve->jet_phi_[0][j]-eve->lepton_phi_[k])*(eve->jet_phi_[0][j]-eve->lepton_phi_[k]))>=0.4)
-                  nJets++;
+                  if(sqrt((eve->jet_eta_[0][j]-eve->lepton_eta_[k])*(eve->jet_eta_[0][j]-eve->lepton_eta_[k])+(eve->jet_phi_[0][j]-eve->lepton_phi_[k])*(eve->jet_phi_[0][j]-eve->lepton_phi_[k]))<=0.4)
+                  JetSatisfyCut = 0;
+                  break;
               }
               else if((eve->lepton_isMuon_[k]==0)&&((eve->lepton_pt_[k])>15)&&(TMath::Abs(eve->lepton_eta_[k])<2.4)&&((TMath::Abs(eve->lepton_scEta_[k])<1.4442)||(TMath::Abs(eve->lepton_scEta_[k])>1.5660))&&(eve->lepton_isTight_[k]==1))
               {
-                  if(sqrt((eve->jet_eta_[0][j]-eve->lepton_eta_[k])*(eve->jet_eta_[0][j]-eve->lepton_eta_[k])+(eve->jet_phi_[0][j]-eve->lepton_phi_[k])*(eve->jet_phi_[0][j]-eve->lepton_phi_[k]))>=0.4)
-                  nJets++;
+                  if(sqrt((eve->jet_eta_[0][j]-eve->lepton_eta_[k])*(eve->jet_eta_[0][j]-eve->lepton_eta_[k])+(eve->jet_phi_[0][j]-eve->lepton_phi_[k])*(eve->jet_phi_[0][j]-eve->lepton_phi_[k]))<=0.4)
+                  JetSatisfyCut = 0;
+                  break;
               }
-              if(eve->jet_pt_[0][j]>30)   nJ++;
           }
 	    //nJets++;
       }
+      if(JetSatisfyCut) nJets++;
     }
     h_jet_n->Fill(nJets);
 
@@ -145,15 +150,15 @@ void ttbar2()
 
 
 
-    //**** do the categorys!
-    if((nM==0)&&(nE==2)&&(Echarge[0]+Echarge[1]==0)&&((EpT[0]>25)||(EpT[1]>25))&&(nJ>=2)&&(eve->MET_Type1xy_[0]>40))
-    {Cat1Index[nCat1] = i;
+    //**** do the categories!
+    if((nM==0)&&(nE==2)&&(Echarge[0]+Echarge[1]==0)&&((EpT[0]>25)||(EpT[1]>25))&&(nJ>=2)&&(eve->MET_Type1xy_[0]>40)){
+    Cat1Index[nCat1] = i;
     nCat1++;}
-    if((nM==1)&&(nE==1)&&(Echarge[0]+Mcharge[0]==0)&&((EpT[0]>25)||(MpT[0]>25))&&(nJ>=2))
-    {Cat2Index[nCat2] = i;
+    if((nM==1)&&(nE==1)&&(Echarge[0]+Mcharge[0]==0)&&((EpT[0]>25)||(MpT[0]>25))&&(nJ>=2)){
+    Cat2Index[nCat2] = i;
     nCat2++;}
-    if((nM==2)&&(nE==1)&&(Mcharge[0]+Mcharge[1]==0)&&((MpT[0]>25)||(MpT[1]>25))&&(nJ>=2)&&(eve->MET_Type1xy_[0]>40))
-    {Cat3Index[nCat3] = i;
+    if((nM==2)&&(nE==0)&&(Mcharge[0]+Mcharge[1]==0)&&((MpT[0]>25)||(MpT[1]>25))&&(nJ>=2)&&(eve->MET_Type1xy_[0]>40)){
+    Cat3Index[nCat3] = i;
     nCat3++;}
     std::cout << "Now we are in entry:"<<i<<std::endl;
     std::cout << "Now the numbers are: "<<nCat1<<"   "<<nCat2<<"   "<<nCat3<<std::endl;
